@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const TempleCanvas = dynamic(() => import("./TempleCanvas"), { ssr: false });
@@ -34,6 +35,12 @@ export function TempleVisual() {
         <TempleCanvas animate={visible && !settings.reducedMotion} interactive={settings.finePointer} />
       </div>
       <p className="sr-only">An illustration of a temple with a tall golden-tipped tower, lit by oil lamps under a full moon.</p>
+      <Link
+        href="/tour"
+        className="glass absolute bottom-3 left-1/2 hidden min-h-11 -translate-x-1/2 items-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap text-white backdrop-blur-sm transition hover:border-gold-bright sm:inline-flex"
+      >
+        Explore in 3D <span aria-hidden="true">→</span>
+      </Link>
     </div>
   );
 }

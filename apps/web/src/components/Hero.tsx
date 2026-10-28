@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Highlights } from "./Highlights";
 
 export function Hero({ visual }: { visual?: ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export function Hero({ visual }: { visual?: ReactNode }) {
               See prices
             </a>
           </div>
+          <Highlights />
         </div>
         <div className="relative aspect-square w-full max-w-xl justify-self-center lg:aspect-[4/5]">{visual}</div>
       </div>
