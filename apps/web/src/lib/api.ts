@@ -1,12 +1,17 @@
 import type {
+  AdminBooking,
+  AdminBookingList,
   ApiErrorBody,
   BookingRequestBody,
+  BookingStatus,
   BookingView,
   CreateBookingResponse,
   FestivalView,
   QuoteRequestBody,
   QuoteResponse,
 } from "@rktd/domain";
+
+export type AdminFilters = { q: string; status: BookingStatus | null; day: string | null };
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -69,4 +74,20 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
+  adminBookings: (filters: AdminFilters, offset: number, passcode: string, signal?: AbortSignal) => {
+    const params = new URLSearchParams({ q: filters.q, offset: String(offset) });
+    if (filters.status) params.set("status", filters.status);
+    if (filters.day) params.set("day", filters.day);
+    return request<AdminBookingList>(`/api/admin/bookings?${params}`, { headers: { "X-Admin-Passcode": passcode }, signal });
+  },
+
+  adminBooking: (reference: string, passcode: string, signal?: AbortSignal) =>
+    request<AdminBooking>(`/api/admin/bookings/${encodeURIComponent(reference)}`, { headers: { "X-Admin-Passcode": passcode }, signal }),
+
+  adminCheckIn: (body: { reference: string; attendeeId: string; day: string; checkedIn: boolean }, passcode: string) =>
+    request<{ ok: true }>("/api/admin/check-ins", {
+      method: "PUT",
+      body: JSON.stringify(body),
+      headers: { "X-Admin-Passcode": passcode },
+    }),
 };

@@ -47,6 +47,10 @@ body {
   background: var(--color-night);
 }
 
+body:has([data-admin]) {
+  background: var(--color-paper);
+}
+
 html:has(dialog[open]) {
   overflow: hidden;
 }

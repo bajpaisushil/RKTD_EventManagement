@@ -4,6 +4,7 @@ import { pool } from "../src/db.js";
 import { migrate } from "../src/db/migrate.js";
 import { seed } from "../src/db/seed.js";
 import { ApiError } from "../src/http/errors.js";
+import { getAdminBooking, listAdminBookings, setCheckedIn } from "../src/services/admin.js";
 import { reserveBooking } from "../src/services/create-booking.js";
 import { loadStockLeft } from "../src/services/stock.js";
 
@@ -110,5 +111,68 @@ describe("the amount charged", () => {
       ["First", "Second"].map((name) => reserveBooking(booking(name, { promoCode: "LASTONE", expectedTotalCents: 1000 }), newKey())),
     );
     expect(attempts.filter((attempt) => attempt.status === "fulfilled")).toHaveLength(1);
+  });
+});
+
+describe("the admin list", () => {
+  const search = (q: string, filters: { status?: "PENDING_PAYMENT" | "EXPIRED"; day?: string } = {}) => listAdminBookings({ q, offset: 0, ...filters });
+
+  it("finds a booking by reference without dashes, anyone's name, email or phone", async () => {
+    const created = await reserveBooking(
+      booking("Kavya", {
+        days: ["2026-11-14"],
+        booker: { attending: true, attendeeId: "me", email: "kavya.r@example.com", phone: "+1 (469) 555-0123" },
+      }),
+      newKey(),
+    );
+    for (const q of [created.reference.replace(/-/g, "").toLowerCase(), "kavya tester", "KAVYA.R@", "469 555 0123"]) {
+      expect((await search(q)).bookings.map((found) => found.reference), q).toContain(created.reference);
+    }
+  });
+
+  it("counts an unpaid booking past its hold as expired, not awaiting payment", async () => {
+    const created = await reserveBooking(booking("Lapsed", { days: ["2026-11-13"] }), newKey());
+    await pool.query("update bookings set hold_expires_at = now() - interval '1 minute' where id = $1", [created.id]);
+    const result = await search("lapsed");
+    expect(result.bookings[0].status).toBe("EXPIRED");
+    expect(result.statusCounts).toMatchObject({ EXPIRED: 1, PENDING_PAYMENT: 0 });
+    expect((await search("lapsed", { status: "PENDING_PAYMENT" })).total).toBe(0);
+    expect((await search("lapsed", { status: "EXPIRED" })).total).toBe(1);
+  });
+
+  it("filters by festival day, counting an All-Day Pass on every day", async () => {
+    const allWeek = await reserveBooking(
+      BookingRequestSchema.parse({
+        attendees: [{ id: "kid", firstName: "Allweek", lastName: "Tester", dateOfBirth: "2018-03-02", entry: { type: "ALL_DAY_PASS" } }],
+        booker: { attending: false, firstName: "Parent", lastName: "Tester", dateOfBirth: "1980-01-01", email: "allweek@example.com", phone: "2145550100" },
+        expectedTotalCents: 3000,
+      }),
+      newKey(),
+    );
+    const thursday = await reserveBooking(booking("Thursday", { days: ["2026-11-12"] }), newKey());
+    const comingTuesday = (await search("", { day: "2026-11-10" })).bookings.map((found) => found.reference);
+    const comingThursday = (await search("", { day: "2026-11-12" })).bookings.map((found) => found.reference);
+    expect(comingTuesday).toContain(allWeek.reference);
+    expect(comingTuesday).not.toContain(thursday.reference);
+    expect(comingThursday).toEqual(expect.arrayContaining([allWeek.reference, thursday.reference]));
+  });
+
+  it("shows one booking in full and checks people in only on their days", async () => {
+    const free = await reserveBooking(booking("Nisha", { days: ["2026-11-12"], promoCode: "FLAT20", expectedTotalCents: 0 }), newKey());
+    const detail = await getAdminBooking(free.reference.toLowerCase());
+    expect(detail.payment.method).toBe("NOT_NEEDED");
+    expect(detail.quote.promo?.code).toBe("FLAT20");
+    expect(detail.people[0]).toMatchObject({ firstName: "Nisha", dateOfBirth: "1990-01-01", days: ["2026-11-12"], checkIns: [] });
+
+    expect(await errorCodeOf(setCheckedIn(free.reference, "me", "2026-11-13", true))).toBe("NOT_BOOKED_THAT_DAY");
+    await setCheckedIn(free.reference, "me", "2026-11-12", true);
+    await setCheckedIn(free.reference, "me", "2026-11-12", true);
+    expect((await getAdminBooking(free.reference)).people[0].checkIns.map((checkIn) => checkIn.day)).toEqual(["2026-11-12"]);
+    await setCheckedIn(free.reference, "me", "2026-11-12", false);
+    expect((await getAdminBooking(free.reference)).people[0].checkIns).toEqual([]);
+  });
+
+  it("says so when a reference doesn't exist", async () => {
+    expect(await errorCodeOf(getAdminBooking("SU-NOPE-0000"))).toBe("NOT_FOUND");
   });
 });
