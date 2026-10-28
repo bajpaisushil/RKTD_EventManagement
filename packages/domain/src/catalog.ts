@@ -37,6 +37,7 @@ export type FestivalConfig = {
   name: string;
   venue: string;
   timeZone: string;
+  contactEmail: string;
   days: IsoDate[];
   agePolicy: AgePolicy;
   catalog: Catalog;

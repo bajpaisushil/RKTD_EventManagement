@@ -12,7 +12,9 @@ export type QuoteResponse = {
   canBook: boolean;
 };
 
-export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "REFUNDED";
+export const BOOKING_STATUSES = ["CONFIRMED", "PENDING_PAYMENT", "EXPIRED", "CANCELLED", "REFUNDED"] as const;
+
+export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 
 export type CreateBookingResponse = {
   reference: string;
@@ -50,6 +52,53 @@ export type BookingView = {
   emailStatus: "SENT" | "NOT_SENT" | "FAILED";
 };
 
+export type AdminBookingSummary = {
+  reference: string;
+  status: BookingStatus;
+  createdAt: string;
+  bookerName: string;
+  bookerEmail: string;
+  bookerPhone: string;
+  peopleCount: number;
+  days: IsoDate[];
+  totalCents: Cents;
+  promoCode: string | null;
+};
+
+export type AdminBookingList = {
+  bookings: AdminBookingSummary[];
+  total: number;
+  statusCounts: Record<BookingStatus, number>;
+  stats: { confirmedBookings: number; peopleBooked: number; revenueCents: Cents; awaitingPayment: number };
+};
+
+export type AdminPerson = BookingPerson & {
+  dateOfBirth: IsoDate;
+  familyGroupId: string | null;
+  checkIns: { day: IsoDate; at: string }[];
+};
+
+export type AdminPayment = {
+  method: "STRIPE_CHECKOUT" | "NOT_NEEDED";
+  testMode: boolean;
+  checkoutSessionId: string | null;
+  paymentIntentId: string | null;
+  dashboardUrl: string | null;
+  card: { brand: string; last4: string; expiry: string; funding: string | null; country: string | null; wallet: string | null } | null;
+  billingName: string | null;
+  receiptUrl: string | null;
+  refundedCents: Cents;
+  lookupFailed: boolean;
+};
+
+export type AdminBooking = Omit<BookingView, "people"> & {
+  people: AdminPerson[];
+  bookerDateOfBirth: IsoDate | null;
+  familyGroups: { id: string; days: IsoDate[] }[];
+  bookingPageUrl: string;
+  payment: AdminPayment;
+};
+
 export type ApiErrorCode =
   | "INVALID_REQUEST"
   | "BOOKING_NOT_ALLOWED"
@@ -58,9 +107,11 @@ export type ApiErrorCode =
   | "IDEMPOTENCY_KEY_MISSING"
   | "IDEMPOTENCY_KEY_REUSED"
   | "NOT_FOUND"
+  | "NOT_BOOKED_THAT_DAY"
   | "UNAUTHORIZED"
   | "RATE_LIMITED"
   | "PAYMENT_PROVIDER_ERROR"
+  | "BUSY"
   | "SERVER_ERROR";
 
 export type ApiErrorBody = {

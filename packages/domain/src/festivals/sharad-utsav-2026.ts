@@ -5,6 +5,7 @@ export const SHARAD_UTSAV_2026: FestivalConfig = {
   name: "Sharad Utsav 2026",
   venue: "Radha Krishna Temple, Allen, Texas",
   timeZone: "America/Chicago",
+  contactEmail: "ravi_chandra@jkyog.org",
   days: ["2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14"],
   agePolicy: {
     referenceDate: "2026-11-10",

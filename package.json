@@ -1,12 +1,12 @@
 {
   "name": "rktd-sharad-utsav",
   "private": true,
-  "packageManager": "pnpm@11.13.0",
+  "packageManager": "pnpm@11.28.8",
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @rktd/api --filter @rktd/web dev",
+    "dev": "pnpm --filter @rktd/domain build && pnpm --parallel --filter @rktd/domain --filter @rktd/api --filter @rktd/web dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",

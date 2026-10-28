@@ -1,6 +1,6 @@
 import { ageOn } from "./age.js";
 import type { FestivalConfig } from "./catalog.js";
-import { formatDay, formatDayList, type IsoDate } from "./dates.js";
+import { formatDay, formatDayList, timeZoneName, type IsoDate } from "./dates.js";
 import type { BookingRequest, QuoteRequest } from "./input.js";
 import { attendee, error, familyPass, warning, type Issue } from "./issues.js";
 import type { PartyMember } from "./party.js";
@@ -87,7 +87,10 @@ function dayProblem(day: IsoDate, festival: FestivalConfig, today: IsoDate): Iss
     return error("NOT_A_FESTIVAL_DAY", `${formatDay(day)} isn't a festival day. The festival runs from ${first} to ${last}.`);
   }
   if (day < today) {
-    return error("DAY_ALREADY_PASSED", `${formatDay(day)} has already happened, so it can't be booked.`);
+    return error(
+      "DAY_ALREADY_PASSED",
+      `Online booking for ${formatDay(day)} closed at midnight ${timeZoneName(festival.timeZone)}. To request a place, email ${festival.contactEmail}.`,
+    );
   }
   return null;
 }

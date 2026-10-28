@@ -23,6 +23,7 @@ export type FestivalView = {
   name: string;
   venue: string;
   timeZone: string;
+  contactEmail: string;
   today: IsoDate;
   salesOpen: boolean;
   allDayPassOnSale: boolean;
@@ -52,6 +53,7 @@ export function festivalView(festival: FestivalConfig, stockLeft: StockLevels, n
     name: festival.name,
     venue: festival.venue,
     timeZone: festival.timeZone,
+    contactEmail: festival.contactEmail,
     today,
     salesOpen: today <= lastDay,
     allDayPassOnSale: today < festival.days[0],

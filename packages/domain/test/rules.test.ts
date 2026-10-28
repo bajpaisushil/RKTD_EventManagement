@@ -73,9 +73,27 @@ describe("dates", () => {
     expect(issueCodes(result)).toEqual(["DAY_ALREADY_PASSED"]);
   });
 
+  it("sells a day until 11:59pm in Allen, even after midnight on the server's UTC clock", () => {
+    const tuesday = { attendees: [adult("a", ["2026-11-10"])] };
+    expect(quote(tuesday, { now: new Date("2026-11-11T01:30:00Z") }).canBook).toBe(true);
+    expect(quote(tuesday, { now: new Date("2026-11-11T05:59:00Z") }).canBook).toBe(true);
+
+    const afterMidnight = quote(tuesday, { now: new Date("2026-11-11T06:00:00Z") });
+    expect(issueCodes(afterMidnight)).toEqual(["DAY_ALREADY_PASSED"]);
+    expect(afterMidnight.issues[0].message).toBe(
+      "Online booking for Tue, Nov 10 closed at midnight Central Time. To request a place, email ravi_chandra@jkyog.org.",
+    );
+  });
+
   it("stops selling All-Day Passes once the festival starts", () => {
     const result = quote({ attendees: [{ id: "c", dateOfBirth: CHILD_DOB, entry: allDayPass }] }, { now: DURING_FESTIVAL });
     expect(issueCodes(result)).toContain("ALL_DAY_PASS_OFF_SALE");
+  });
+
+  it("sells All-Day Passes until 11:59pm the night before the festival", () => {
+    const child = { attendees: [{ id: "c", dateOfBirth: CHILD_DOB, entry: allDayPass }] };
+    expect(issueCodes(quote(child, { now: new Date("2026-11-10T05:59:00Z") }))).not.toContain("ALL_DAY_PASS_OFF_SALE");
+    expect(issueCodes(quote(child, { now: new Date("2026-11-10T06:00:00Z") }))).toContain("ALL_DAY_PASS_OFF_SALE");
   });
 
   it("rejects impossible dates before any rule runs", () => {

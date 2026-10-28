@@ -25,6 +25,15 @@ export function todayIn(timeZone: string, now: Date): IsoDate {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+export function timeZoneName(timeZone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longGeneric" }).formatToParts(new Date());
+    return parts.find((part) => part.type === "timeZoneName")?.value ?? timeZone;
+  } catch {
+    return timeZone;
+  }
+}
+
 function toUtcNoon(date: IsoDate): Date {
   return new Date(`${date}T12:00:00Z`);
 }
