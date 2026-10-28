@@ -1,3 +1,4 @@
+import { AssistantLauncher } from "@/assistant/AssistantLauncher";
 import { FestivalContent } from "@/booking/FestivalContent";
 import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
@@ -11,6 +12,7 @@ export default function HomePage() {
         <FestivalContent />
       </main>
       <Footer />
+      <AssistantLauncher />
     </>
   );
 }

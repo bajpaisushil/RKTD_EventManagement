@@ -10,6 +10,9 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().default("Sharad Utsav <onboarding@resend.dev>"),
   UPSTASH_REDIS_REST_URL: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
+  LOCAL_LLM_URL: z.string().optional(),
+  LLM_MODEL: z.string().optional(),
   ADMIN_PASSCODE: z.string().min(6).optional(),
 });
 

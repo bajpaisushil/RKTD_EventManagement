@@ -74,6 +74,12 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
+  assistant: (messages: { role: "user" | "assistant"; content: string }[]) =>
+    request<{ answer: string; sources: string[]; answeredBy: "model" | "search" }>("/api/assistant", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    }),
+
   adminBookings: (filters: AdminFilters, offset: number, passcode: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ q: filters.q, offset: String(offset) });
     if (filters.status) params.set("status", filters.status);
